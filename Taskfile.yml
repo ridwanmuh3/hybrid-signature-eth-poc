@@ -1,0 +1,38 @@
+version: "3"
+
+tasks:
+  run-node:
+    desc: "running ethereum local node"
+    cmds:
+      - anvil --port 8540 --block-gas-limit 50000000
+
+  run-client:
+    desc: "running client interface on web"
+    cmds:
+      - cd client && bun dev
+
+  compile-contract:
+    desc: "compiling contract ready to deploy"
+    cmds:
+      - cd oracle-server && make compile-contract
+
+  forge-deploy:
+    desc: "deploying compiled contract to local node"
+    cmds:
+      - cd ethereum && ORACLE_ADDRESS=$(ADDR) forge script script/Deploy.s.sol:Deploy --rpc-url http://localhost:8540 --broadcast --private-key $(KEY)
+
+  run-oracle:
+    desc: "running oracle backend"
+    cmds:
+      - |
+        if [ -z "{{.ADDR}}" ]; then
+          echo "❌ Error: ADDR is missing."
+          echo "Usage: task run-oracle ADDR=0x..."
+          exit 1
+        fi
+
+      - |
+        sed -i.bak "s|^CONTRACT_ADDRESS=.*|CONTRACT_ADDRESS={{.ADDR}}|" ./oracle-server/.env
+
+      - |
+        cd oracle-server && make run-dev
