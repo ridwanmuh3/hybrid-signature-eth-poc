@@ -1,0 +1,55 @@
+# Oracle Server Justfile
+
+set dotenv-load
+
+# Run oracle server in dev mode (hot reload)
+run:
+    go run ./cmd/app/main.go
+
+# Build optimized binary
+build:
+    go build -ldflags "-w -s" -o ./bin/main ./cmd/app/main.go
+    chmod +x ./bin/main
+
+# Run the built binary
+run-prod: build
+    ./bin/main
+
+# Generate a wallet keypair for contract deployment
+genkey-contract:
+    go run ./scripts/genwallet.go
+
+# Deploy contract via Go script
+deploy-contract:
+    go run ./scripts/deploy.go
+
+# Compile Transactions.sol and generate Go ABI bindings
+compile-contract:
+    forge build --root ../ethereum
+    forge inspect --root ../ethereum src/Transactions.sol:Transactions abi --json > ./artifacts/Transactions.abi
+    forge inspect --root ../ethereum src/Transactions.sol:Transactions bytecode > ./artifacts/Transactions.bin
+    abigen --bin=./artifacts/Transactions.bin --abi=./artifacts/Transactions.abi --pkg=transactions --out=./artifacts/Transactions.go
+
+# Run all tests
+test:
+    go test -v ./test/... -timeout 300s
+
+# Run security tests only
+test-security:
+    go test -v ./test/... -run TestSecurity_ -count=1
+
+# Run benchmarks
+bench:
+    go test -v -count=1 -bench=. -benchtime=10s -benchmem -run '^$' ./test/...
+
+# Run integration/performance tests
+test-perf:
+    go test -v ./test/ -run TestPerformanceMetrics -timeout 30m | tee performance_test.log
+
+# Vet all packages
+vet:
+    go vet ./...
+
+# Show help
+help:
+    @just --list

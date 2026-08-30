@@ -1,0 +1,9 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+solc_version = "0.8.31"
+
+[rpc_endpoints]
+local = "http://localhost:8540"
+sepolia = "${SEPOLIA_RPC_URL}"

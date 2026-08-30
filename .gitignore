@@ -1,0 +1,18 @@
+# Tool configs (local, not project)
+.claude
+.codex
+.vscode
+.impecable
+.impeccable
+
+# Test output dumps
+security-test-result-new.yxy
+
+# Build artifacts
+*.log
+apps/oracle/bin/
+apps/oracle/cache/
+apps/oracle/results/
+
+# Client backups
+apps/web/vitest.config.ts.backup**
